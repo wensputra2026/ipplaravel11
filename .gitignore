@@ -3,6 +3,9 @@
 /public/build
 /public/hot
 /public/storage
+/public/uploads/*
+!/public/uploads/.gitkeep
+!/public/uploads/**/.gitkeep
 /storage/*.key
 /vendor
 .env
@@ -17,3 +20,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+*.sql
+*.tar.gz
+*.zip
