@@ -13,11 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Pastikan akun administrator default ada
+        \App\Models\User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'nama' => 'Administrator',
+                'email' => 'admin@smanbenlutu.sch.id',
+                'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
+                'level' => 'admin',
+                'is_active' => true,
+            ]
+        );
     }
 }
