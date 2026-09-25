@@ -121,18 +121,22 @@ class DashboardController extends Controller
         /* ----------------------------------------------------------------
          | TANGGUNGAN PER KELUARGA  (filtered per class for Wali)
          * ---------------------------------------------------------------- */
-        $kk_expression = "COALESCE(NULLIF(nama_ayah, ''), NULLIF(nama_wali_l, ''), NULLIF(nama_ibu, ''), 'Tanpa Nama')";
-        $tanggunganQuery = DB::table('siswa')
+        $subQuery = DB::table('siswa')
             ->where('status', 'Aktif')
-            ->selectRaw("{$kk_expression} as kepala_keluarga, COUNT(id) as jml_tanggungan, GROUP_CONCAT(nama_siswa SEPARATOR ', ') as anak_sekolah")
-            ->groupByRaw($kk_expression)
-            ->orderByDesc('jml_tanggungan')
-            ->orderBy('kepala_keluarga');
+            ->selectRaw("id, nama_siswa, kelas_id, COALESCE(NULLIF(nama_ayah, ''), NULLIF(nama_wali_l, ''), NULLIF(nama_ibu, ''), 'Tanpa Nama') as kepala_keluarga");
 
         if ($isWali && $kelasId) {
-            $tanggunganQuery->where('kelas_id', $kelasId);
+            $subQuery->where('kelas_id', $kelasId);
         }
-        $tanggunganList = $tanggunganQuery->take(10)->get();
+
+        $tanggunganList = DB::table(DB::raw("({$subQuery->toSql()}) as sub"))
+            ->mergeBindings($subQuery)
+            ->selectRaw("kepala_keluarga, COUNT(id) as jml_tanggungan, GROUP_CONCAT(nama_siswa SEPARATOR ', ') as anak_sekolah")
+            ->groupBy('kepala_keluarga')
+            ->orderByDesc('jml_tanggungan')
+            ->orderBy('kepala_keluarga')
+            ->take(10)
+            ->get();
 
         /* ----------------------------------------------------------------
          | RECENT ACTIVITIES  (Wali Kelas: only own user's activity)
