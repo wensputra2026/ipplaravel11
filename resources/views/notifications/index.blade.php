@@ -193,14 +193,6 @@
               </td>
             </tr>
           @endforelse
-                  <h6 class="fw-bold mt-2 text-dark">Data Siswa Lengkap!</h6>
-                  <p class="text-muted small mb-0">
-                    Tidak ditemukan siswa dengan data atau berkas yang kurang pada filter ini.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          @endforelse
         </tbody>
       </table>
     </div>
