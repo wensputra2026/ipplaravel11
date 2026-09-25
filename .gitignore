@@ -21,5 +21,6 @@ yarn-error.log
 /.idea
 /.vscode
 *.sql
+!database/database_ipp.sql
 *.tar.gz
 *.zip
