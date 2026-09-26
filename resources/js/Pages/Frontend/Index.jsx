@@ -126,7 +126,7 @@ export default function FrontendIndex({
                                 </a>
                             ) : (
                                 <a href="/login" className="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1" style={{ borderRadius: '8px', fontWeight: 600 }}>
-                                    <i className="bi bi-box-arrow-in-right"></i> Masuk Petugas
+                                    <i className="bi bi-box-arrow-in-right"></i> Login
                                 </a>
                             )}
                         </div>

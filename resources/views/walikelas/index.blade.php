@@ -80,7 +80,11 @@
                           </div>
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
-                            <input type="text" name="tahun_ajaran" class="form-control" value="{{ $w->tahun_ajaran }}" required>
+                            <select name="tahun_ajaran" class="form-select" required>
+                              @foreach($tahunList as $ta)
+                                <option value="{{ $ta }}" {{ $w->tahun_ajaran == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                              @endforeach
+                            </select>
                           </div>
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Semester <span class="text-danger">*</span></label>
@@ -151,7 +155,11 @@
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
-            <input type="text" name="tahun_ajaran" class="form-control" value="{{ $activeTa }}" required>
+            <select name="tahun_ajaran" class="form-select" required>
+              @foreach($tahunList as $ta)
+                <option value="{{ $ta }}" {{ $activeTa == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+              @endforeach
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Semester <span class="text-danger">*</span></label>

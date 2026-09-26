@@ -17,7 +17,7 @@
     <h3 class="fw-bold text-dark mb-1" style="font-size: 1.45rem; letter-spacing: -0.02em;">{{ $appName }}</h3>
     <p class="text-secondary small mb-2 fw-medium">{{ $schoolName }}</p>
     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill d-inline-flex align-items-center gap-1" style="font-size: 0.72rem;">
-      <x-heroicon-o-lock-closed class="heroicon-sm" style="width: 13px !important; height: 13px !important;" /> Portal Masuk Petugas
+      <x-heroicon-o-lock-closed class="heroicon-sm" style="width: 13px !important; height: 13px !important;" /> Portal Login
     </span>
   </div>
 

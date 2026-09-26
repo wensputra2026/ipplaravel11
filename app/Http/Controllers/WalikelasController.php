@@ -8,23 +8,27 @@ use App\Models\Kelas;
 use App\Models\Gtk;
 use App\Models\ActivityLog;
 use App\Models\AppSetting;
+use App\Models\MasterTahunAjaran;
 
 class WalikelasController extends Controller
 {
     public function index()
     {
+        $activeTa = AppSetting::get('active_tahun_ajaran', '2026/2027');
+        $activeSem = AppSetting::get('active_semester', 'Ganjil');
+
         $walikelasList = Walikelas::with(['gtk', 'kelas'])
+            ->where('tahun_ajaran', $activeTa)
+            ->where('semester', $activeSem)
             ->orderBy('id_walikelas', 'desc')
             ->paginate(10)
             ->withQueryString();
 
         $kelasList = Kelas::orderBy('nama_kelas')->get();
         $gtkList = Gtk::orderBy('nama')->get();
+        $tahunList = MasterTahunAjaran::orderBy('tahun_ajaran', 'desc')->pluck('tahun_ajaran');
 
-        $activeTa = AppSetting::get('active_tahun_ajaran', '2026/2027');
-        $activeSem = AppSetting::get('active_semester', 'Ganjil');
-
-        return view('walikelas.index', compact('walikelasList', 'kelasList', 'gtkList', 'activeTa', 'activeSem'));
+        return view('walikelas.index', compact('walikelasList', 'kelasList', 'gtkList', 'tahunList', 'activeTa', 'activeSem'));
     }
 
     public function store(Request $request)

@@ -943,7 +943,7 @@
         @else
           <a href="{{ route('login') }}" class="btn-nav-primary">
             <x-heroicon-o-arrow-right-on-rectangle class="heroicon-sm" />
-            <span>Masuk Petugas</span>
+            <span>Login</span>
           </a>
         @endauth
       </div>
@@ -984,7 +984,7 @@
         @else
           <a href="{{ route('login') }}" class="btn-hero-translucent">
             <x-heroicon-o-shield-check class="heroicon-sm" />
-            <span>Portal Masuk Petugas</span>
+            <span>Portal Login</span>
           </a>
         @endauth
       </div>
