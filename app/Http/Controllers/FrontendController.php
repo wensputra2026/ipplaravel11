@@ -25,17 +25,36 @@ class FrontendController extends Controller
         // Keep in session
         session(['tahun_ajaran' => $tahunAktif, 'semester' => $semesterAktif]);
 
-        // Base Query Siswa
-        $query = Siswa::aktif();
-        if (!empty($tahunAktif)) {
-            $query->where('tahun_ajaran', $tahunAktif);
-        }
-        if (!empty($semesterAktif)) {
-            $query->whereRaw('LOWER(semester) = ?', [strtolower($semesterAktif)]);
+        // Base Query Siswa (sinkron dengan Dashboard & riwayat rombel)
+        $siswaQuery = Siswa::whereHas('rombels', function($q) use ($tahunAktif, $semesterAktif) {
+            if (!empty($tahunAktif)) {
+                $q->where('tahun_ajaran', $tahunAktif);
+            }
+            if (!empty($semesterAktif)) {
+                $q->whereRaw('LOWER(semester) = ?', [strtolower($semesterAktif)]);
+            }
+            $q->where('status', 'Aktif');
+        });
+
+        $totalSiswa = (clone $siswaQuery)->count();
+        if ($totalSiswa === 0) {
+            // Fallback to direct siswa query if no rombels recorded
+            $fallbackQuery = Siswa::aktif();
+            if (!empty($tahunAktif)) {
+                $fallbackQuery->where('tahun_ajaran', $tahunAktif);
+            }
+            if (!empty($semesterAktif)) {
+                $fallbackQuery->whereRaw('LOWER(semester) = ?', [strtolower($semesterAktif)]);
+            }
+            $allSiswa = $fallbackQuery->get();
+            $totalSiswa = $allSiswa->count();
+        } else {
+            $allSiswa = (clone $siswaQuery)->with(['rombels' => function($q) use ($tahunAktif, $semesterAktif) {
+                if (!empty($tahunAktif)) $q->where('tahun_ajaran', $tahunAktif);
+                if (!empty($semesterAktif)) $q->whereRaw('LOWER(semester) = ?', [strtolower($semesterAktif)]);
+            }])->get();
         }
 
-        $allSiswa = $query->get();
-        $totalSiswa = $allSiswa->count();
         $totalLaki = $allSiswa->where('jk', 'L')->count();
         $totalPerempuan = $allSiswa->where('jk', 'P')->count();
 
@@ -177,7 +196,11 @@ class FrontendController extends Controller
         $kelasList = Kelas::orderBy('nama_kelas')->get();
         $classProgress = [];
         foreach ($kelasList as $kelas) {
-            $studentsInClass = $allSiswa->where('kelas_id', $kelas->id);
+            $studentsInClass = $allSiswa->filter(function($st) use ($kelas) {
+                $rombel = $st->relationLoaded('rombels') ? $st->rombels->first() : null;
+                $kId = $rombel ? $rombel->kelas_id : $st->kelas_id;
+                return $kId == $kelas->id;
+            });
             $countInClass = $studentsInClass->count();
             if ($countInClass === 0) continue;
 
@@ -236,9 +259,10 @@ class FrontendController extends Controller
         // Daftar Tahun Ajaran
         $daftarTahun = MasterTahunAjaran::pluck('tahun_ajaran')
             ->merge(Siswa::pluck('tahun_ajaran'))
+            ->merge(\App\Models\SiswaRombel::pluck('tahun_ajaran'))
             ->filter()
             ->unique()
-            ->sort()
+            ->sortDesc()
             ->values();
 
         $appName = AppSetting::get('app_name', 'E-IPP');
