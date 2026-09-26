@@ -28,6 +28,9 @@ class Siswa extends Model
 
     public function getKelasNamaForPeriod($ta = null, $semester = null)
     {
+        $ta = $ta ?: AppSetting::get('active_tahun_ajaran');
+        $semester = $semester ?: AppSetting::get('active_semester');
+
         if ($ta) {
             $rombel = $this->relationLoaded('rombels')
                 ? $this->rombels->first(function($r) use ($ta, $semester) {
