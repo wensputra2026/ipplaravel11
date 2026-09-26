@@ -35,6 +35,16 @@ class MasterController extends Controller
         return back()->with('success', 'Tahun ajaran berhasil ditambahkan.');
     }
 
+    public function updateTahunAjaran(Request $request, $id)
+    {
+        $tahun = MasterTahunAjaran::findOrFail($id);
+        $request->validate(['tahun_ajaran' => 'required|string|max:20|unique:master_tahun_ajaran,tahun_ajaran,' . $id . ',id_tahun_ajaran']);
+        $old = $tahun->tahun_ajaran;
+        $tahun->update(['tahun_ajaran' => $request->tahun_ajaran]);
+        ActivityLog::record('update', 'master', "Mengubah tahun ajaran dari {$old} menjadi {$request->tahun_ajaran}");
+        return back()->with('success', 'Tahun ajaran berhasil diperbarui.');
+    }
+
     public function setActiveTahunAjaran($id)
     {
         $tahun = MasterTahunAjaran::findOrFail($id);
@@ -66,6 +76,16 @@ class MasterController extends Controller
         return back()->with('success', 'Kategori siswa berhasil ditambahkan.');
     }
 
+    public function updateKategori(Request $request, $id)
+    {
+        $kategori = MasterKategoriSiswa::findOrFail($id);
+        $request->validate(['nama_kategori' => 'required|string|max:150']);
+        $old = $kategori->nama_kategori;
+        $kategori->update(['nama_kategori' => $request->nama_kategori]);
+        ActivityLog::record('update', 'master', "Mengubah kategori siswa: {$old} -> {$request->nama_kategori}");
+        return back()->with('success', 'Kategori siswa berhasil diperbarui.');
+    }
+
     public function destroyKategori($id)
     {
         MasterKategoriSiswa::destroy($id);
@@ -79,6 +99,16 @@ class MasterController extends Controller
         MasterPekerjaan::create(['nama_pekerjaan' => $request->nama_pekerjaan]);
         ActivityLog::record('create', 'master', "Menambahkan pekerjaan referensi: {$request->nama_pekerjaan}");
         return back()->with('success', 'Pekerjaan berhasil ditambahkan.');
+    }
+
+    public function updatePekerjaan(Request $request, $id)
+    {
+        $pekerjaan = MasterPekerjaan::findOrFail($id);
+        $request->validate(['nama_pekerjaan' => 'required|string|max:100|unique:master_pekerjaan,nama_pekerjaan,' . $id . ',id_pekerjaan']);
+        $old = $pekerjaan->nama_pekerjaan;
+        $pekerjaan->update(['nama_pekerjaan' => $request->nama_pekerjaan]);
+        ActivityLog::record('update', 'master', "Mengubah pekerjaan: {$old} -> {$request->nama_pekerjaan}");
+        return back()->with('success', 'Pekerjaan berhasil diperbarui.');
     }
 
     public function destroyPekerjaan($id)
@@ -96,6 +126,16 @@ class MasterController extends Controller
         return back()->with('success', 'Rentang penghasilan berhasil ditambahkan.');
     }
 
+    public function updatePenghasilan(Request $request, $id)
+    {
+        $penghasilan = MasterPenghasilan::findOrFail($id);
+        $request->validate(['range_penghasilan' => 'required|string|max:100|unique:master_penghasilan,range_penghasilan,' . $id . ',id_penghasilan']);
+        $old = $penghasilan->range_penghasilan;
+        $penghasilan->update(['range_penghasilan' => $request->range_penghasilan]);
+        ActivityLog::record('update', 'master', "Mengubah rentang penghasilan: {$old} -> {$request->range_penghasilan}");
+        return back()->with('success', 'Rentang penghasilan berhasil diperbarui.');
+    }
+
     public function destroyPenghasilan($id)
     {
         MasterPenghasilan::destroy($id);
@@ -109,6 +149,16 @@ class MasterController extends Controller
         MasterSumberBiaya::create(['nama_sumber_biaya' => $request->nama_sumber_biaya]);
         ActivityLog::record('create', 'master', "Menambahkan sumber biaya: {$request->nama_sumber_biaya}");
         return back()->with('success', 'Sumber biaya berhasil ditambahkan.');
+    }
+
+    public function updateSumberBiaya(Request $request, $id)
+    {
+        $sumber = MasterSumberBiaya::findOrFail($id);
+        $request->validate(['nama_sumber_biaya' => 'required|string|max:100']);
+        $old = $sumber->nama_sumber_biaya;
+        $sumber->update(['nama_sumber_biaya' => $request->nama_sumber_biaya]);
+        ActivityLog::record('update', 'master', "Mengubah sumber biaya: {$old} -> {$request->nama_sumber_biaya}");
+        return back()->with('success', 'Sumber biaya berhasil diperbarui.');
     }
 
     public function destroySumberBiaya($id)

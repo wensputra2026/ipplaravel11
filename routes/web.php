@@ -85,15 +85,20 @@ Route::middleware('auth')->group(function () {
         // Data Referensi / Master
         Route::get('/master', [MasterController::class, 'index'])->name('master.index');
         Route::post('/master/tahun-ajaran', [MasterController::class, 'storeTahunAjaran'])->name('master.tahun_ajaran.store');
+        Route::put('/master/tahun-ajaran/{id}', [MasterController::class, 'updateTahunAjaran'])->name('master.tahun_ajaran.update');
         Route::post('/master/tahun-ajaran/{id}/set-active', [MasterController::class, 'setActiveTahunAjaran'])->name('master.tahun_ajaran.set_active');
         Route::delete('/master/tahun-ajaran/{id}', [MasterController::class, 'destroyTahunAjaran'])->name('master.tahun_ajaran.destroy');
         Route::post('/master/kategori', [MasterController::class, 'storeKategori'])->name('master.kategori.store');
+        Route::put('/master/kategori/{id}', [MasterController::class, 'updateKategori'])->name('master.kategori.update');
         Route::delete('/master/kategori/{id}', [MasterController::class, 'destroyKategori'])->name('master.kategori.destroy');
         Route::post('/master/pekerjaan', [MasterController::class, 'storePekerjaan'])->name('master.pekerjaan.store');
+        Route::put('/master/pekerjaan/{id}', [MasterController::class, 'updatePekerjaan'])->name('master.pekerjaan.update');
         Route::delete('/master/pekerjaan/{id}', [MasterController::class, 'destroyPekerjaan'])->name('master.pekerjaan.destroy');
         Route::post('/master/penghasilan', [MasterController::class, 'storePenghasilan'])->name('master.penghasilan.store');
+        Route::put('/master/penghasilan/{id}', [MasterController::class, 'updatePenghasilan'])->name('master.penghasilan.update');
         Route::delete('/master/penghasilan/{id}', [MasterController::class, 'destroyPenghasilan'])->name('master.penghasilan.destroy');
         Route::post('/master/sumber-biaya', [MasterController::class, 'storeSumberBiaya'])->name('master.sumber_biaya.store');
+        Route::put('/master/sumber-biaya/{id}', [MasterController::class, 'updateSumberBiaya'])->name('master.sumber_biaya.update');
         Route::delete('/master/sumber-biaya/{id}', [MasterController::class, 'destroySumberBiaya'])->name('master.sumber_biaya.destroy');
 
         // Manajemen Akun
