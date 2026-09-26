@@ -25,30 +25,68 @@ class SiswaController extends Controller
 
         $query = Siswa::with('kelas');
 
-        // Scope to Wali's class if user is Wali
-        if ($isWali && $user->kelas_id) {
-            $query->where('kelas_id', $user->kelas_id);
-        } elseif ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
+        $filterTa = $request->get('tahun_ajaran');
+        $filterSem = $request->get('semester');
+
+        if ($filterTa) {
+            $query->whereHas('rombels', function($q) use ($filterTa, $filterSem, $request, $isWali, $user) {
+                $q->where('tahun_ajaran', $filterTa);
+                if ($filterSem) {
+                    $q->where('semester', $filterSem);
+                }
+                if ($isWali && $user->kelas_id) {
+                    $q->where('kelas_id', $user->kelas_id);
+                } elseif ($request->filled('kelas_id')) {
+                    $q->where('kelas_id', $request->kelas_id);
+                }
+            });
+
+            // Eager load rombel for the selected period
+            $query->with(['rombels' => function($q) use ($filterTa, $filterSem) {
+                $q->where('tahun_ajaran', $filterTa);
+                if ($filterSem) {
+                    $q->where('semester', $filterSem);
+                }
+                $q->with('kelas');
+            }]);
+        } else {
+            // Scope to Wali's class if user is Wali
+            if ($isWali && $user->kelas_id) {
+                $query->where('kelas_id', $user->kelas_id);
+            } elseif ($request->filled('kelas_id')) {
+                $query->where('kelas_id', $request->kelas_id);
+            }
+
+            if ($filterSem) {
+                $query->where('semester', $filterSem);
+            }
         }
 
         // Status Filter (default to Aktif)
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'Semua') {
             if ($request->status === 'Aktif') {
-                $query->aktif();
+                if ($filterTa) {
+                    $query->whereHas('rombels', function($q) use ($filterTa, $filterSem) {
+                        $q->where('tahun_ajaran', $filterTa);
+                        if ($filterSem) $q->where('semester', $filterSem);
+                        $q->where('status', 'Aktif');
+                    });
+                } else {
+                    $query->aktif();
+                }
             } else {
                 $query->where('status', $request->status);
             }
-        } else {
-            $query->aktif();
-        }
-
-        // Tahun Ajaran & Semester Filter
-        if ($request->filled('tahun_ajaran')) {
-            $query->where('tahun_ajaran', $request->tahun_ajaran);
-        }
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
+        } elseif (!$request->filled('status')) {
+            // Default: tampilkan siswa aktif pada periode tersebut jika ada rombels
+            if ($filterTa) {
+                $query->whereHas('rombels', function($q) use ($filterTa, $filterSem) {
+                    $q->where('tahun_ajaran', $filterTa);
+                    if ($filterSem) $q->where('semester', $filterSem);
+                });
+            } else {
+                $query->aktif();
+            }
         }
 
         // Search Filter

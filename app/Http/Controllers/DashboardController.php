@@ -41,22 +41,45 @@ class DashboardController extends Controller
         /* ----------------------------------------------------------------
          | BASE SISWA QUERY  (filtered by selected TA, semester, and class for Wali)
          * ---------------------------------------------------------------- */
-        $siswaQuery = Siswa::aktif()
-            ->where('tahun_ajaran', $selectedTa)
-            ->where('semester', $selectedSem);
-        if ($isWali && $kelasId) {
-            $siswaQuery->where('kelas_id', $kelasId);
+        $siswaQuery = Siswa::whereHas('rombels', function($q) use ($selectedTa, $selectedSem, $isWali, $kelasId) {
+            $q->where('tahun_ajaran', $selectedTa);
+            if ($selectedSem) {
+                $q->where('semester', $selectedSem);
+            }
+            $q->where('status', 'Aktif');
+            if ($isWali && $kelasId) {
+                $q->where('kelas_id', $kelasId);
+            }
+        });
+
+        $totalSiswa = (clone $siswaQuery)->count();
+        if ($totalSiswa === 0) {
+            // Fallback to direct siswa query if no rombels recorded
+            $fallbackQuery = Siswa::aktif()->where('tahun_ajaran', $selectedTa)->where('semester', $selectedSem);
+            if ($isWali && $kelasId) $fallbackQuery->where('kelas_id', $kelasId);
+            $allSiswa = $fallbackQuery->get()->toArray();
+            $totalSiswa = count($allSiswa);
+        } else {
+            $allSiswa = (clone $siswaQuery)->get()->toArray();
         }
-        $allSiswa   = (clone $siswaQuery)->get()->toArray();
-        $totalSiswa = count($allSiswa);
 
         /* ----------------------------------------------------------------
          | METRIC COUNTS
          * ---------------------------------------------------------------- */
-        $totalAlumni = Siswa::lulus()
-            ->where('tahun_ajaran', $selectedTa)
-            ->where('semester', $selectedSem)
-            ->count();
+        $totalAlumni = Siswa::whereHas('rombels', function($q) use ($selectedTa, $selectedSem) {
+            $q->where('tahun_ajaran', $selectedTa);
+            if ($selectedSem) {
+                $q->where('semester', $selectedSem);
+            }
+            $q->where('status', 'Lulus');
+        })->count();
+
+        if ($totalAlumni === 0) {
+            $totalAlumni = Siswa::lulus()
+                ->where('tahun_ajaran', $selectedTa)
+                ->where('semester', $selectedSem)
+                ->count();
+        }
 
         // Wali only sees their own class; Admin sees all
         if ($isWali && $kelasId) {
@@ -132,9 +155,9 @@ class DashboardController extends Controller
             }
         }
 
-        $rekapKelasQuery = Kelas::withCount(['siswa' => fn($q) => $q->aktif()
-                ->where('tahun_ajaran', $selectedTa)
-                ->where('semester', $selectedSem)])
+        $rekapKelasQuery = Kelas::withCount(['rombels as siswa_count' => fn($q) => $q->where('tahun_ajaran', $selectedTa)
+                ->where('semester', $selectedSem)
+                ->where('status', 'Aktif')])
             ->orderBy('tingkat')
             ->orderBy('nama_kelas');
 

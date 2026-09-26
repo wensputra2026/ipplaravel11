@@ -32,15 +32,9 @@ class KelasController extends Controller
 
         $query = Kelas::query();
 
-        // Filter kelas sesuai tahun ajaran yang dipilih jika kelas memiliki penanda tahun ajaran tersebut
-        $hasKelasWithTa = Kelas::where('tahun_ajaran', $selectedTa)->exists();
-        if ($hasKelasWithTa) {
-            $query->where('tahun_ajaran', $selectedTa);
-        }
-
-        // Hitung jumlah siswa aktif HANYA pada tahun ajaran dan semester yang dipilih agar data tidak bercampur
-        $kelas = $query->withCount(['siswa' => function($q) use ($selectedTa, $selectedSem) {
-            $q->aktif()->where('tahun_ajaran', $selectedTa);
+        // Hitung jumlah siswa dari siswa_rombel sesuai tahun ajaran dan semester yang dipilih
+        $kelas = $query->withCount(['rombels as siswa_count' => function($q) use ($selectedTa, $selectedSem) {
+            $q->where('tahun_ajaran', $selectedTa);
             if (!empty($selectedSem)) {
                 $q->where('semester', $selectedSem);
             }

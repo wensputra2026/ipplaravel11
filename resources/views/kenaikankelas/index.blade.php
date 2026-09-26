@@ -14,7 +14,22 @@
       </div>
       <div class="card-body">
         <form method="GET" action="{{ route('kenaikankelas.index') }}" class="row g-3 align-items-end">
-          <div class="col-md-5">
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Tahun Ajaran Asal</label>
+            <select name="source_tahun_ajaran" class="form-select" onchange="this.form.submit()">
+              @foreach($tahunList as $t)
+                <option value="{{ $t }}" {{ $sourceTa == $t ? 'selected' : '' }}>{{ $t }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small fw-semibold">Semester Asal</label>
+            <select name="source_semester" class="form-select" onchange="this.form.submit()">
+              <option value="Genap" {{ $sourceSem == 'Genap' ? 'selected' : '' }}>Genap (Akhir TA)</option>
+              <option value="Ganjil" {{ $sourceSem == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+            </select>
+          </div>
+          <div class="col-md-4">
             <label class="form-label small fw-semibold">Pilih Kelas Asal Siswa</label>
             <select name="source_kelas_id" class="form-select" onchange="this.form.submit()">
               <option value="">-- Pilih Kelas Asal --</option>
@@ -25,13 +40,18 @@
               @endforeach
             </select>
           </div>
-          <div class="col-md-7">
-            @if($sourceKelas)
-              <div class="alert alert-info py-2 px-3 mb-0 small d-inline-flex align-items-center">
-                <x-heroicon-o-information-circle class="heroicon-sm me-1" /> Kelas Asal: <b>{{ $sourceKelas->nama_kelas }}</b> (Tingkat {{ $sourceKelas->tingkat }}). Ditemukan <b>{{ $siswaList->count() }}</b> siswa aktif.
-              </div>
-            @endif
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-primary w-100">
+              <x-heroicon-o-arrow-path class="heroicon-sm me-1" /> Muat Siswa
+            </button>
           </div>
+          @if($sourceKelas)
+            <div class="col-12 mt-2">
+              <div class="alert alert-info py-2 px-3 mb-0 small d-inline-flex align-items-center">
+                <x-heroicon-o-information-circle class="heroicon-sm me-1" /> Kelas Asal: <b>{{ $sourceKelas->nama_kelas }}</b> (Periode: TA {{ $sourceTa }} - {{ $sourceSem }}). Ditemukan <b>{{ $siswaList->count() }}</b> siswa terdaftar.
+              </div>
+            </div>
+          @endif
         </form>
       </div>
     </div>
@@ -43,6 +63,8 @@
       <form method="POST" action="{{ route('kenaikankelas.process') }}">
         @csrf
         <input type="hidden" name="source_kelas_id" value="{{ $sourceKelas->id }}">
+        <input type="hidden" name="source_tahun_ajaran" value="{{ $sourceTa }}">
+        <input type="hidden" name="source_semester" value="{{ $sourceSem }}">
 
         <div class="card mb-4">
           <div class="card-header bg-white">

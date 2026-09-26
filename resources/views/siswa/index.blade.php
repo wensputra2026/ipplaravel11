@@ -101,7 +101,22 @@
 
 <div class="card">
   <div class="card-header bg-white">
+    @if(request()->filled('tahun_ajaran'))
+      <div class="alert alert-info py-2 px-3 mb-2 small d-flex justify-content-between align-items-center border-0 bg-info-subtle text-info-emphasis">
+        <div class="d-inline-flex align-items-center gap-1">
+          <x-heroicon-o-calendar class="heroicon-sm" /> 
+          <span>Memfilter data siswa pada periode: <strong>TA {{ request('tahun_ajaran') }} {{ request('semester') ? '('.request('semester').')' : '' }}</strong></span>
+        </div>
+        <a href="{{ route('siswa.index') }}" class="btn btn-outline-info btn-sm py-0 px-2 text-decoration-none bg-white">Hapus Filter Periode</a>
+      </div>
+    @endif
     <form method="GET" action="{{ route('siswa.index') }}" class="row g-2 align-items-center w-100">
+      @if(request()->filled('tahun_ajaran'))
+        <input type="hidden" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}">
+      @endif
+      @if(request()->filled('semester'))
+        <input type="hidden" name="semester" value="{{ request('semester') }}">
+      @endif
       <div class="col-md-3">
         <select name="kelas_id" class="form-select form-select-sm" onchange="this.form.submit()">
           <option value="">-- Semua Kelas --</option>
@@ -129,7 +144,7 @@
         </div>
       </div>
       <div class="col-md-2 text-md-end">
-        @if(request()->anyFilled(['kelas_id', 'status', 'search']))
+        @if(request()->anyFilled(['kelas_id', 'status', 'search', 'tahun_ajaran', 'semester']))
           <a href="{{ route('siswa.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
         @endif
       </div>
@@ -181,7 +196,7 @@
                 </span>
               </td>
               <td>
-                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.7rem; padding: 2px 6px;">{{ $s->kelas->nama_kelas ?? 'Belum ada' }}</span>
+                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.7rem; padding: 2px 6px;">{{ $s->getKelasNamaForPeriod(request('tahun_ajaran'), request('semester')) }}</span>
               </td>
               <td class="lh-sm">
                 @if($s->kategori_ipp)

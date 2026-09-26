@@ -759,6 +759,20 @@ class SiswaImportExportService
                             }
                             if (!empty($updateData)) {
                                 $exists->update($updateData);
+                                if (!empty($exists->kelas_id) && !empty($exists->tahun_ajaran)) {
+                                    \App\Models\SiswaRombel::updateOrCreate(
+                                        [
+                                            'siswa_id'     => $exists->id,
+                                            'tahun_ajaran' => $exists->tahun_ajaran,
+                                            'semester'     => $exists->semester ?: 'Ganjil',
+                                        ],
+                                        [
+                                            'kelas_id'   => $exists->kelas_id,
+                                            'status'     => $exists->status ?: 'Aktif',
+                                            'updated_at' => now(),
+                                        ]
+                                    );
+                                }
                                 $updated++;
                             } else {
                                 $skipped++;
@@ -774,6 +788,20 @@ class SiswaImportExportService
                             }
                             if (!empty($updateData)) {
                                 $exists->update($updateData);
+                                if (!empty($exists->kelas_id) && !empty($exists->tahun_ajaran)) {
+                                    \App\Models\SiswaRombel::updateOrCreate(
+                                        [
+                                            'siswa_id'     => $exists->id,
+                                            'tahun_ajaran' => $exists->tahun_ajaran,
+                                            'semester'     => $exists->semester ?: 'Ganjil',
+                                        ],
+                                        [
+                                            'kelas_id'   => $exists->kelas_id,
+                                            'status'     => $exists->status ?: 'Aktif',
+                                            'updated_at' => now(),
+                                        ]
+                                    );
+                                }
                                 $updated++;
                             } else {
                                 $skipped++;
@@ -782,7 +810,21 @@ class SiswaImportExportService
                         }
                     } else {
                         // Tambah Siswa Baru
-                        Siswa::create($data);
+                        $newSiswa = Siswa::create($data);
+                        if (!empty($newSiswa->kelas_id) && !empty($newSiswa->tahun_ajaran)) {
+                            \App\Models\SiswaRombel::updateOrCreate(
+                                [
+                                    'siswa_id'     => $newSiswa->id,
+                                    'tahun_ajaran' => $newSiswa->tahun_ajaran,
+                                    'semester'     => $newSiswa->semester ?: 'Ganjil',
+                                ],
+                                [
+                                    'kelas_id'   => $newSiswa->kelas_id,
+                                    'status'     => $newSiswa->status ?: 'Aktif',
+                                    'updated_at' => now(),
+                                ]
+                            );
+                        }
                         $imported++;
                     }
                 } catch (\Throwable $e) {

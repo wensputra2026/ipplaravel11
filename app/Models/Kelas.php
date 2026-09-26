@@ -23,6 +23,11 @@ class Kelas extends Model
         return $this->hasMany(Siswa::class, 'kelas_id');
     }
 
+    public function rombels()
+    {
+        return $this->hasMany(SiswaRombel::class, 'kelas_id');
+    }
+
     public function waliKelasRel()
     {
         return $this->hasOne(Walikelas::class, 'id_kelas');
