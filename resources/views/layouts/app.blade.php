@@ -464,6 +464,16 @@
       flex-grow: 1;
     }
 
+    /* App Footer */
+    .app-footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 18px;
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin-top: auto;
+    }
+
     .page-header {
       margin-bottom: 12px;
     }
@@ -601,6 +611,14 @@
       .stat-widget .stat-value {
         font-size: 1.35rem;
       }
+      .app-footer {
+        padding: 12px 14px;
+        text-align: center;
+      }
+      .app-footer .footer-content {
+        flex-direction: column !important;
+        gap: 6px !important;
+      }
     }
   </style>
 
@@ -730,6 +748,9 @@
     <!-- Content Slot -->
     @yield('content')
   </main>
+
+  <!-- Footer -->
+  @include('layouts.partials.footer')
 </div>
 
 <!-- Core JS -->
