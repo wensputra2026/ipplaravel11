@@ -9,20 +9,58 @@ use App\Models\Gtk;
 use App\Models\ActivityLog;
 use App\Models\AppSetting;
 
+use App\Models\MasterTahunAjaran;
+use App\Models\Siswa;
+
 class KelasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $activeTa = AppSetting::get('active_tahun_ajaran', '2026/2027');
+        $activeTa  = AppSetting::get('active_tahun_ajaran', '2026/2027');
         $activeSem = AppSetting::get('active_semester', 'Ganjil');
 
-        $kelas = Kelas::withCount(['siswa' => function($q) {
-            $q->aktif();
-        }])->orderBy('tingkat')->orderBy('nama_kelas')->paginate(10)->withQueryString();
+        // Periode yang ditampilkan: default ke periode aktif/berjalan
+        $selectedTa  = $request->get('ta', $activeTa);
+        $selectedSem = $request->get('semester', $activeSem);
+
+        // Daftar tahun ajaran yang tersedia untuk filter
+        $availableTaList = MasterTahunAjaran::orderBy('tahun_ajaran', 'desc')->pluck('tahun_ajaran')->toArray();
+        $kelasTaList     = Kelas::distinct()->whereNotNull('tahun_ajaran')->where('tahun_ajaran', '!=', '')->pluck('tahun_ajaran')->toArray();
+        $siswaTaList     = Siswa::distinct()->whereNotNull('tahun_ajaran')->where('tahun_ajaran', '!=', '')->pluck('tahun_ajaran')->toArray();
+        $availableTaList = array_values(array_unique(array_merge($availableTaList, $kelasTaList, $siswaTaList, [$activeTa])));
+        rsort($availableTaList);
+
+        $query = Kelas::query();
+
+        // Filter kelas sesuai tahun ajaran yang dipilih jika kelas memiliki penanda tahun ajaran tersebut
+        $hasKelasWithTa = Kelas::where('tahun_ajaran', $selectedTa)->exists();
+        if ($hasKelasWithTa) {
+            $query->where('tahun_ajaran', $selectedTa);
+        }
+
+        // Hitung jumlah siswa aktif HANYA pada tahun ajaran dan semester yang dipilih agar data tidak bercampur
+        $kelas = $query->withCount(['siswa' => function($q) use ($selectedTa, $selectedSem) {
+            $q->aktif()->where('tahun_ajaran', $selectedTa);
+            if (!empty($selectedSem)) {
+                $q->where('semester', $selectedSem);
+            }
+        }])
+        ->orderBy('tingkat')
+        ->orderBy('nama_kelas')
+        ->paginate(10)
+        ->withQueryString();
 
         $gtkList = Gtk::orderBy('nama')->get();
 
-        return view('kelas.index', compact('kelas', 'gtkList', 'activeTa', 'activeSem'));
+        return view('kelas.index', compact(
+            'kelas',
+            'gtkList',
+            'activeTa',
+            'activeSem',
+            'selectedTa',
+            'selectedSem',
+            'availableTaList'
+        ));
     }
 
     public function store(Request $request)

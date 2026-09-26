@@ -46,6 +46,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa/search-ajax', [SiswaController::class, 'searchAjax'])->middleware('throttle:search_ajax')->name('siswa.search_ajax');
     Route::get('/siswa/konversi', [SiswaController::class, 'konversi'])->name('siswa.konversi');
     Route::post('/siswa/konversi/proses', [SiswaController::class, 'processKonversi'])->name('siswa.process_konversi');
+    Route::get('/siswa/template', [SiswaController::class, 'template'])->name('siswa.template');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('/siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
     Route::resource('siswa', SiswaController::class);
 
     // Validasi & Progres (Akses Admin & Wali Kelas)

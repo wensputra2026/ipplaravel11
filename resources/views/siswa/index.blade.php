@@ -5,15 +5,100 @@
 @section('page_subtitle', 'Manajemen profil, data keluarga, ekonomi, dan kelengkapan dokumen siswa')
 
 @section('page_actions')
-  <a href="{{ route('siswa.create') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+  <a href="{{ route('siswa.create') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 shadow-xs">
     <x-heroicon-o-plus class="heroicon-sm" /> Tambah Siswa
   </a>
-  <a href="{{ route('siswa.konversi') }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+  <a href="{{ route('siswa.template') }}" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs" title="Download Template Excel">
+    <x-heroicon-o-arrow-down-tray class="heroicon-sm" /> Template
+  </a>
+  <button type="button" class="btn btn-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs" data-bs-toggle="modal" data-bs-target="#importExcelModal" title="Import Data Siswa dari Excel">
+    <x-heroicon-o-arrow-up-tray class="heroicon-sm" /> Import
+  </button>
+  <a href="{{ route('siswa.export', request()->all()) }}" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs" title="Export Data ke Excel">
+    <x-heroicon-o-table-cells class="heroicon-sm" /> Export
+  </a>
+  <a href="{{ route('siswa.konversi') }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-xs">
     <x-heroicon-o-calculator class="heroicon-sm" /> Konversi IPP
   </a>
 @endsection
 
 @section('content')
+@if(session('import_result'))
+  @php $imp = session('import_result'); @endphp
+  <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden border-top border-4 {{ ($imp['failed'] ?? 0) > 0 ? 'border-danger' : 'border-success' }}">
+    <div class="card-body p-4">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+        <div>
+          <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+            @if(($imp['failed'] ?? 0) > 0)
+              <x-heroicon-o-exclamation-circle class="heroicon text-danger" /> Laporan Hasil Impor File Excel
+            @else
+              <x-heroicon-o-check-circle class="heroicon text-success" /> Impor File Excel Selesai
+            @endif
+          </h5>
+          <div class="text-muted small">
+            Total <strong>{{ $imp['total_rows'] ?? 0 }}</strong> baris data diproses dari file Excel.
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-7 fw-semibold">
+            ✓ Baru: {{ $imp['imported'] ?? 0 }}
+          </span>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-7 fw-semibold">
+            ↻ Diperbarui: {{ $imp['updated'] ?? 0 }}
+          </span>
+          <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 fs-7 fw-semibold">
+            ⊘ Dilewati: {{ $imp['skipped'] ?? 0 }}
+          </span>
+          @if(($imp['failed'] ?? 0) > 0)
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-7 fw-semibold">
+              ✕ Gagal: {{ $imp['failed'] ?? 0 }}
+            </span>
+          @endif
+        </div>
+      </div>
+
+      {{-- Rincian Kesalahan Input --}}
+      @if(!empty($imp['errors']))
+        <div class="mb-3">
+          <div class="fw-bold text-danger mb-2 small d-flex align-items-center gap-1.5">
+            <x-heroicon-o-x-circle class="heroicon-sm text-danger" />
+            Daftar Kesalahan Input pada File Excel ({{ count($imp['errors']) }} baris perlu diperbaiki):
+          </div>
+          <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle" style="max-height: 260px; overflow-y: auto;">
+            <ul class="mb-0 ps-3 font-monospace small text-danger-emphasis">
+              @foreach($imp['errors'] as $err)
+                <li class="mb-1">{{ $err }}</li>
+              @endforeach
+            </ul>
+          </div>
+          <div class="form-text small text-muted mt-1">
+            * Baris dengan kesalahan di atas tidak dimasukkan ke sistem untuk mencegah data cacat atau ganda. Silakan perbaiki data pada baris tersebut di file Excel Anda lalu unggah ulang.
+          </div>
+        </div>
+      @endif
+
+      {{-- Rincian Duplikat / Skipped --}}
+      @if(!empty($imp['skipped_info']))
+        <div>
+          <button class="btn btn-sm btn-link text-decoration-none p-0 text-secondary small d-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSkipped">
+            <x-heroicon-o-chevron-down class="heroicon-sm" /> Lihat {{ count($imp['skipped_info']) }} catatan data yang dilewati (duplikat)
+          </button>
+          <div class="collapse mt-2" id="collapseSkipped">
+            <div class="p-3 bg-light rounded-3 border small font-monospace text-muted" style="max-height: 200px; overflow-y: auto;">
+              <ul class="mb-0 ps-3">
+                @foreach($imp['skipped_info'] as $skip)
+                  <li class="mb-1">{{ $skip }}</li>
+                @endforeach
+              </ul>
+            </div>
+          </div>
+        </div>
+      @endif
+    </div>
+  </div>
+@endif
+
 <div class="card">
   <div class="card-header bg-white">
     <form method="GET" action="{{ route('siswa.index') }}" class="row g-2 align-items-center w-100">
@@ -155,4 +240,6 @@
     </div>
   @endif
 </div>
+
+@include('siswa.partials.import-modal')
 @endsection

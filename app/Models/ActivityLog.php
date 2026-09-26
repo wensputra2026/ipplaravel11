@@ -22,9 +22,12 @@ class ActivityLog extends Model
     public static function record($type, $module, $desc = null)
     {
         $user = auth()->user();
+        $userId = $user ? $user->id : (\App\Models\User::value('id') ?? 1);
+        $username = $user ? $user->username : 'system';
+
         return static::create([
-            'user_id' => $user ? $user->id : 0,
-            'username' => $user ? $user->username : 'system',
+            'user_id' => $userId,
+            'username' => $username,
             'activity_type' => $type,
             'module' => $module,
             'description' => $desc,

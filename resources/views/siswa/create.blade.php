@@ -5,6 +5,12 @@
 @section('page_subtitle', 'Formulir terpadu data pribadi, keluarga, ekonomi, dan berkas siswa')
 
 @section('page_actions')
+  <a href="{{ route('siswa.template') }}" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs" title="Download Template Excel">
+    <x-heroicon-o-arrow-down-tray class="heroicon-sm" /> Template Excel
+  </a>
+  <button type="button" class="btn btn-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+    <x-heroicon-o-arrow-up-tray class="heroicon-sm" /> Import Excel
+  </button>
   <a href="{{ route('siswa.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
     <x-heroicon-o-arrow-left class="heroicon-sm" /> Kembali
   </a>
@@ -342,4 +348,6 @@
     </div>
   </div>
 </form>
+
+@include('siswa.partials.import-modal')
 @endsection

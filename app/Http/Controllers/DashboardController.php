@@ -13,9 +13,11 @@ use App\Models\Walikelas;
 use App\Models\AppSetting;
 use App\Models\ActivityLog;
 
+use App\Models\MasterTahunAjaran;
+
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user    = Auth::user();
         $isWali  = $user->isWali();
@@ -24,20 +26,37 @@ class DashboardController extends Controller
         $activeTa  = AppSetting::get('active_tahun_ajaran', '2026/2027');
         $activeSem = AppSetting::get('active_semester', 'Ganjil');
 
+        // Periode yang sedang ditampilkan: default ke periode aktif/berjalan, atau sesuai filter user
+        $selectedTa  = $request->get('ta', $activeTa);
+        $selectedSem = $request->get('semester', $activeSem);
+
+        // Daftar tahun ajaran yang tersedia untuk dipilih
+        $availableTaList = MasterTahunAjaran::orderBy('tahun_ajaran', 'desc')->pluck('tahun_ajaran')->toArray();
+        $siswaTaList     = Siswa::distinct()->whereNotNull('tahun_ajaran')->where('tahun_ajaran', '!=', '')->pluck('tahun_ajaran')->toArray();
+        $availableTaList = array_values(array_unique(array_merge($availableTaList, $siswaTaList, [$activeTa])));
+        rsort($availableTaList);
+
+        $availableSemList = ['Ganjil', 'Genap'];
+
         /* ----------------------------------------------------------------
-         | BASE SISWA QUERY  (filtered by class for Wali Kelas)
+         | BASE SISWA QUERY  (filtered by selected TA, semester, and class for Wali)
          * ---------------------------------------------------------------- */
-        $siswaQuery = Siswa::aktif();
+        $siswaQuery = Siswa::aktif()
+            ->where('tahun_ajaran', $selectedTa)
+            ->where('semester', $selectedSem);
         if ($isWali && $kelasId) {
             $siswaQuery->where('kelas_id', $kelasId);
         }
-        $allSiswa = (clone $siswaQuery)->get()->toArray();
+        $allSiswa   = (clone $siswaQuery)->get()->toArray();
         $totalSiswa = count($allSiswa);
 
         /* ----------------------------------------------------------------
          | METRIC COUNTS
          * ---------------------------------------------------------------- */
-        $totalAlumni = Siswa::lulus()->count();
+        $totalAlumni = Siswa::lulus()
+            ->where('tahun_ajaran', $selectedTa)
+            ->where('semester', $selectedSem)
+            ->count();
 
         // Wali only sees their own class; Admin sees all
         if ($isWali && $kelasId) {
@@ -101,7 +120,11 @@ class DashboardController extends Controller
         /* ----------------------------------------------------------------
          | REKAP KELAS  (Wali Kelas only sees their own class)
          * ---------------------------------------------------------------- */
-        $waliList    = Walikelas::with('gtk')->get();
+        $waliList = Walikelas::with('gtk')
+            ->where('tahun_ajaran', $selectedTa)
+            ->where('semester', $selectedSem)
+            ->get();
+
         $waliByKelas = [];
         foreach ($waliList as $w) {
             if ($w->id_kelas && $w->gtk) {
@@ -109,7 +132,9 @@ class DashboardController extends Controller
             }
         }
 
-        $rekapKelasQuery = Kelas::withCount(['siswa' => fn($q) => $q->aktif()])
+        $rekapKelasQuery = Kelas::withCount(['siswa' => fn($q) => $q->aktif()
+                ->where('tahun_ajaran', $selectedTa)
+                ->where('semester', $selectedSem)])
             ->orderBy('tingkat')
             ->orderBy('nama_kelas');
 
@@ -123,6 +148,8 @@ class DashboardController extends Controller
          * ---------------------------------------------------------------- */
         $subQuery = DB::table('siswa')
             ->where('status', 'Aktif')
+            ->where('tahun_ajaran', $selectedTa)
+            ->where('semester', $selectedSem)
             ->selectRaw("id, nama_siswa, kelas_id, COALESCE(NULLIF(nama_ayah, ''), NULLIF(nama_wali_l, ''), NULLIF(nama_ibu, ''), 'Tanpa Nama') as kepala_keluarga");
 
         if ($isWali && $kelasId) {
@@ -160,6 +187,10 @@ class DashboardController extends Controller
             'recentActivities',
             'activeTa',
             'activeSem',
+            'selectedTa',
+            'selectedSem',
+            'availableTaList',
+            'availableSemList',
             'isWali',
             'kelasId'
         ));

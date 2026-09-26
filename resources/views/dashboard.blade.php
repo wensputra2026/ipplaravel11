@@ -3,22 +3,76 @@
 @section('title', 'Dashboard')
 @section('page_title', 'Dashboard')
 @section('page_subtitle', $isWali
-    ? 'Data ringkasan kelas Anda: ' . (Auth::user()->kelas->nama_kelas ?? 'Kelas Saya')
-    : 'Ringkasan data siswa, status verifikasi, dan statistik akademik SMAN Benlutu'
+    ? 'Data ringkasan kelas Anda: ' . (Auth::user()->kelas->nama_kelas ?? 'Kelas Saya') . ' — Periode: TA ' . $selectedTa . ' (' . $selectedSem . ')'
+    : 'Ringkasan data siswa dan statistik akademik — Periode Berjalan: TA ' . $selectedTa . ' (' . $selectedSem . ')'
 )
 
 @section('page_actions')
-  <div class="d-flex align-items-center gap-2">
-    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fs-7 fw-semibold d-inline-flex align-items-center gap-1">
-      <x-heroicon-o-calendar class="heroicon-sm" /> TA: {{ $activeTa }} ({{ $activeSem }})
-    </span>
+  <form method="GET" action="{{ route('dashboard') }}" class="d-flex align-items-center gap-2">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-white border-end-0 text-muted">
+        <x-heroicon-o-calendar class="heroicon-sm text-primary" />
+      </span>
+      <select name="ta" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" title="Pilih Tahun Ajaran">
+        @foreach($availableTaList as $ta)
+          <option value="{{ $ta }}" {{ $selectedTa == $ta ? 'selected' : '' }}>
+            TA {{ $ta }} {{ $ta == $activeTa ? '(Aktif)' : '' }}
+          </option>
+        @endforeach
+      </select>
+      <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()" title="Pilih Semester">
+        @foreach($availableSemList as $sem)
+          <option value="{{ $sem }}" {{ $selectedSem == $sem ? 'selected' : '' }}>
+            {{ $sem }} {{ ($selectedTa == $activeTa && $sem == $activeSem) ? '(Aktif)' : '' }}
+          </option>
+        @endforeach
+      </select>
+    </div>
+    @if($selectedTa != $activeTa || $selectedSem != $activeSem)
+      <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Periode Berjalan">
+        Reset
+      </a>
+    @endif
     <a href="{{ route('siswa.index') }}" class="btn btn-primary btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-1">
       <x-heroicon-o-users class="heroicon-sm" /> Data Siswa
     </a>
-  </div>
+  </form>
 @endsection
 
 @section('content')
+@if($selectedTa != $activeTa || $selectedSem != $activeSem)
+  <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between rounded-3 border-0 shadow-xs">
+    <div class="small d-flex align-items-center gap-1.5">
+      <x-heroicon-o-information-circle class="heroicon-sm text-info" />
+      Menampilkan data arsip periode <strong>Tahun Ajaran {{ $selectedTa }} - Semester {{ $selectedSem }}</strong>. (Periode Berjalan: {{ $activeTa }} {{ $activeSem }})
+    </div>
+    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">Kembali ke Periode Berjalan</a>
+  </div>
+@endif
+
+@if($totalSiswa === 0)
+  <div class="alert alert-warning py-3 px-4 mb-4 rounded-3 border-0 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p-2 rounded-circle bg-warning-subtle text-warning-emphasis">
+        <x-heroicon-o-exclamation-triangle style="width: 24px; height: 24px;" />
+      </div>
+      <div>
+        <div class="fw-bold text-dark">Belum ada data siswa aktif untuk Tahun Ajaran {{ $selectedTa }} (Semester {{ $selectedSem }})</div>
+        <div class="text-muted small">Data dashboard difilter ketat per tahun ajaran dan semester agar data antar periode tidak bercampur.</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ route('siswa.index') }}" class="btn btn-success btn-sm d-inline-flex align-items-center gap-1 shadow-xs">
+        <x-heroicon-o-arrow-up-tray class="heroicon-sm" /> Impor Data Siswa
+      </a>
+      @if(!$isWali)
+        <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+          <x-heroicon-o-cog-6-tooth class="heroicon-sm" /> Pengaturan Periode
+        </a>
+      @endif
+    </div>
+  </div>
+@endif
 <!-- Top 4 Metric Info-Boxes -->
 <div class="row g-3 mb-4">
   <div class="col-12 col-sm-6 col-xl-3">

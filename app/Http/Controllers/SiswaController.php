@@ -14,6 +14,7 @@ use App\Models\MasterTahunAjaran;
 use App\Models\AppSetting;
 use App\Models\ActivityLog;
 use App\Services\FileCompressionService;
+use App\Services\SiswaImportExportService;
 
 class SiswaController extends Controller
 {
@@ -40,6 +41,14 @@ class SiswaController extends Controller
             }
         } else {
             $query->aktif();
+        }
+
+        // Tahun Ajaran & Semester Filter
+        if ($request->filled('tahun_ajaran')) {
+            $query->where('tahun_ajaran', $request->tahun_ajaran);
+        }
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
         }
 
         // Search Filter
@@ -328,5 +337,86 @@ class SiswaController extends Controller
             });
 
         return response()->json($results);
+    }
+
+    /**
+     * Download Template File Excel untuk Import Siswa
+     */
+    public function template(SiswaImportExportService $service)
+    {
+        return $service->downloadTemplate();
+    }
+
+    /**
+     * Proses Import Data Siswa dari File Excel (.xlsx, .xls, .csv)
+     */
+    public function import(Request $request, SiswaImportExportService $service)
+    {
+        $request->validate([
+            'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'mode' => 'nullable|in:merge,overwrite,skip',
+        ], [
+            'excel_file.required' => 'Silakan pilih file Excel yang ingin diimpor.',
+            'excel_file.mimes' => 'Format file harus berupa Excel (.xlsx, .xls) atau CSV (.csv).',
+            'excel_file.max' => 'Ukuran file Excel tidak boleh melebihi 10MB.',
+        ]);
+
+        $user = Auth::user();
+        $defaultKelasId = ($user && $user->isWali()) ? $user->kelas_id : null;
+        $mode = $request->input('mode', 'merge');
+
+        try {
+            $result = $service->import($request->file('excel_file'), $mode, $defaultKelasId);
+
+            if ($result['status'] === 'empty') {
+                return redirect()->back()->with('warning', $result['errors'][0] ?? 'File kosong atau format kolom tidak sesuai.');
+            }
+
+            session()->flash('import_result', $result);
+
+            $msg = "Impor data siswa selesai: <strong>{$result['imported']}</strong> ditambahkan, <strong>{$result['updated']}</strong> diperbarui, <strong>{$result['skipped']}</strong> dilewati, <strong>{$result['failed']}</strong> baris dengan kesalahan input.";
+
+            $type = ($result['imported'] + $result['updated'] > 0)
+                ? 'success'
+                : ($result['failed'] > 0 ? 'error' : 'warning');
+
+            return redirect()->route('siswa.index')->with($type, $msg);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses file Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export Data Siswa ke File Excel
+     */
+    public function export(Request $request, SiswaImportExportService $service)
+    {
+        $user = Auth::user();
+        $query = Siswa::with('kelas');
+
+        if ($user && $user->isWali() && $user->kelas_id) {
+            $query->where('kelas_id', $user->kelas_id);
+        } elseif ($request->filled('kelas_id')) {
+            $query->where('kelas_id', $request->kelas_id);
+        }
+
+        if ($request->filled('status') && $request->status !== 'Semua') {
+            if ($request->status === 'Aktif') {
+                $query->aktif();
+            } else {
+                $query->where('status', $request->status);
+            }
+        } else {
+            $query->aktif();
+        }
+
+        $siswa = $query->orderBy('nama_siswa')->get();
+
+        if ($siswa->isEmpty()) {
+            return redirect()->back()->with('warning', 'Tidak ada data siswa untuk diekspor.');
+        }
+
+        $filename = 'Data_Siswa_' . date('Ymd_His') . '.xlsx';
+        return $service->export($siswa, $filename);
     }
 }
