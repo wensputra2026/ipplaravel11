@@ -77,14 +77,41 @@
 <div class="row g-3 mb-4">
   <div class="col-12 col-sm-6 col-xl-3">
     <div class="card border-0 shadow-sm rounded-3 h-100 p-3">
-      <div class="d-flex align-items-center">
-        <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3" style="width: 52px; height: 52px;">
+      <div class="d-flex align-items-start">
+        <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 52px; height: 52px;">
           <x-heroicon-o-academic-cap style="width:28px;height:28px;" />
         </div>
-        <div>
+        <div class="flex-grow-1 min-w-0">
           <div class="text-secondary small fw-medium">Total Siswa</div>
-          <div class="fs-4 fw-bold text-dark">{{ number_format($totalSiswa, 0, ',', '.') }}</div>
-          <div class="text-success small d-flex align-items-center gap-1" style="font-size: 0.75rem;"><x-heroicon-o-check-circle style="width:14px;height:14px;" />Siswa aktif</div>
+          <div class="d-flex align-items-baseline gap-2">
+            <div class="fs-4 fw-bold text-dark">{{ number_format($totalSiswa + $totalAlumni, 0, ',', '.') }}</div>
+            @if($totalAlumni > 0)
+              <span class="badge bg-secondary-subtle text-secondary border" style="font-size:0.7rem;">{{ number_format($totalSiswa, 0, ',', '.') }} Aktif</span>
+            @endif
+          </div>
+          {{-- Rincian per tingkat --}}
+          <div class="d-flex flex-wrap gap-1 mt-1">
+            @forelse($rekapByTingkat as $tingkat => $jml)
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:0.68rem;">
+                Kls {{ $tingkat }}: {{ $jml }}
+              </span>
+            @empty
+            @endforelse
+            @foreach($rekapLulusByTingkat as $tingkat => $jml)
+              <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.68rem;" title="Lulus di periode ini">
+                Kls {{ $tingkat }} Lulus: {{ $jml }}
+              </span>
+            @endforeach
+          </div>
+          @if($totalAlumni > 0)
+            <div class="text-muted mt-1" style="font-size:0.7rem;">
+              <x-heroicon-o-academic-cap style="width:11px;height:11px;" /> {{ $totalAlumni }} siswa lulus periode ini
+            </div>
+          @else
+            <div class="text-success small d-flex align-items-center gap-1 mt-1" style="font-size:0.75rem;">
+              <x-heroicon-o-check-circle style="width:14px;height:14px;" /> Semua siswa aktif
+            </div>
+          @endif
         </div>
       </div>
     </div>

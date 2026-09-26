@@ -54,7 +54,7 @@
             <th>Nama Kelas</th>
             <th>Tingkat</th>
             <th>Jurusan / Peminatan</th>
-            <th>Tahun Ajaran</th>
+            <th>Periode Data</th>
             <th class="text-center" style="width: 150px;">Jumlah Siswa ({{ $selectedSem }})</th>
             <th class="text-end" style="width: 130px;">Aksi</th>
           </tr>
@@ -70,7 +70,10 @@
               </td>
               <td><span class="badge bg-primary-subtle text-primary">{{ $k->tingkat }}</span></td>
               <td>{{ $k->jurusan ?: '-' }}</td>
-              <td><span class="badge bg-light text-secondary border">{{ $k->tahun_ajaran }}</span></td>
+              <td>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $selectedTa }}</span>
+                <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size:0.7rem;">{{ $selectedSem }}</span>
+              </td>
               <td class="text-center">
                 <a href="{{ route('siswa.index', ['kelas_id' => $k->id, 'tahun_ajaran' => $selectedTa, 'semester' => $selectedSem]) }}" class="badge bg-success-subtle text-success text-decoration-none px-2 py-1 d-inline-flex align-items-center gap-1" title="Lihat siswa kelas ini pada TA {{ $selectedTa }} ({{ $selectedSem }})">
                   <x-heroicon-o-users class="heroicon-sm" /> {{ $k->siswa_count }} Siswa

@@ -81,6 +81,38 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        // Rekap jumlah siswa AKTIF per tingkat (X, XI, XII) untuk ditampilkan di kartu
+        $rekapByTingkat = [];
+        $tingkatList = ['X', 'XI', 'XII'];
+        foreach ($tingkatList as $tingkat) {
+            $count = Siswa::whereHas('rombels', function($q) use ($selectedTa, $selectedSem, $tingkat, $isWali, $kelasId) {
+                $q->where('tahun_ajaran', $selectedTa)
+                  ->where('semester', $selectedSem)
+                  ->where('status', 'Aktif')
+                  ->whereHas('kelas', fn($kq) => $kq->where('tingkat', $tingkat));
+                if ($isWali && $kelasId) {
+                    $q->where('kelas_id', $kelasId);
+                }
+            })->count();
+            if ($count > 0) {
+                $rekapByTingkat[$tingkat] = $count;
+            }
+        }
+
+        // Rekap lulus per tingkat (biasanya hanya kelas XII di semester Genap)
+        $rekapLulusByTingkat = [];
+        foreach ($tingkatList as $tingkat) {
+            $count = Siswa::whereHas('rombels', function($q) use ($selectedTa, $selectedSem, $tingkat) {
+                $q->where('tahun_ajaran', $selectedTa)
+                  ->where('semester', $selectedSem)
+                  ->where('status', 'Lulus')
+                  ->whereHas('kelas', fn($kq) => $kq->where('tingkat', $tingkat));
+            })->count();
+            if ($count > 0) {
+                $rekapLulusByTingkat[$tingkat] = $count;
+            }
+        }
+
         // Wali only sees their own class; Admin sees all
         if ($isWali && $kelasId) {
             $totalKelas = 1;  // hanya kelas sendiri
@@ -203,6 +235,8 @@ class DashboardController extends Controller
             'totalKelas',
             'totalUsers',
             'totalAlumni',
+            'rekapByTingkat',
+            'rekapLulusByTingkat',
             'stats',
             'rekapKelas',
             'waliByKelas',

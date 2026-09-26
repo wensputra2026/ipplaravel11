@@ -64,7 +64,7 @@
                         <div class="modal-body">
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Pilih Guru / GTK <span class="text-danger">*</span></label>
-                            <select name="id_gtk" class="form-select" required>
+                            <select name="id_gtk" class="form-select tom-select" required>
                               @foreach($gtkList as $g)
                                 <option value="{{ $g->id }}" {{ $w->id_gtk == $g->id ? 'selected' : '' }}>{{ $g->nama }} (NIP: {{ $g->nip ?: '-' }})</option>
                               @endforeach
@@ -72,7 +72,7 @@
                           </div>
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Pilih Kelas Binaan <span class="text-danger">*</span></label>
-                            <select name="id_kelas" class="form-select" required>
+                            <select name="id_kelas" class="form-select tom-select" required>
                               @foreach($kelasList as $k)
                                 <option value="{{ $k->id }}" {{ $w->id_kelas == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }} ({{ $k->tingkat }})</option>
                               @endforeach
@@ -80,7 +80,7 @@
                           </div>
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
-                            <select name="tahun_ajaran" class="form-select" required>
+                            <select name="tahun_ajaran" class="form-select tom-select" required>
                               @foreach($tahunList as $ta)
                                 <option value="{{ $ta }}" {{ $w->tahun_ajaran == $ta ? 'selected' : '' }}>{{ $ta }}</option>
                               @endforeach
@@ -88,7 +88,7 @@
                           </div>
                           <div class="mb-3">
                             <label class="form-label small fw-semibold">Semester <span class="text-danger">*</span></label>
-                            <select name="semester" class="form-select" required>
+                            <select name="semester" class="form-select tom-select" required>
                               <option value="Ganjil" {{ $w->semester === 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                               <option value="Genap" {{ $w->semester === 'Genap' ? 'selected' : '' }}>Genap</option>
                             </select>
@@ -137,7 +137,7 @@
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label small fw-semibold">Pilih Guru / GTK <span class="text-danger">*</span></label>
-            <select name="id_gtk" class="form-select" required>
+            <select name="id_gtk" class="form-select tom-select" required>
               <option value="">-- Pilih GTK --</option>
               @foreach($gtkList as $g)
                 <option value="{{ $g->id }}">{{ $g->nama }} (NIP: {{ $g->nip ?: '-' }})</option>
@@ -146,7 +146,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Pilih Kelas Binaan <span class="text-danger">*</span></label>
-            <select name="id_kelas" class="form-select" required>
+            <select name="id_kelas" class="form-select tom-select" required>
               <option value="">-- Pilih Kelas --</option>
               @foreach($kelasList as $k)
                 <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->tingkat }})</option>
@@ -155,7 +155,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Tahun Ajaran <span class="text-danger">*</span></label>
-            <select name="tahun_ajaran" class="form-select" required>
+            <select name="tahun_ajaran" class="form-select tom-select" required>
               @foreach($tahunList as $ta)
                 <option value="{{ $ta }}" {{ $activeTa == $ta ? 'selected' : '' }}>{{ $ta }}</option>
               @endforeach
@@ -163,7 +163,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Semester <span class="text-danger">*</span></label>
-            <select name="semester" class="form-select" required>
+            <select name="semester" class="form-select tom-select" required>
               <option value="Ganjil" {{ $activeSem == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
               <option value="Genap" {{ $activeSem == 'Genap' ? 'selected' : '' }}>Genap</option>
             </select>
@@ -178,3 +178,26 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Re-init Tom Select setiap kali modal Bootstrap ditampilkan
+  document.querySelectorAll('.modal').forEach(function (modalEl) {
+    modalEl.addEventListener('shown.bs.modal', function () {
+      if (typeof window.initTomSelect === 'function') {
+        window.initTomSelect(modalEl);
+      }
+    });
+    // Destroy instance saat modal ditutup agar tidak konflik saat dibuka lagi
+    modalEl.addEventListener('hidden.bs.modal', function () {
+      modalEl.querySelectorAll('select.tom-select').forEach(function (sel) {
+        if (sel.tomselect) {
+          sel.tomselect.destroy();
+        }
+      });
+    });
+  });
+});
+</script>
+@endpush
